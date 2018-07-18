@@ -19,7 +19,7 @@ with open('output.csv', 'w') as output_file:
     for terms in organisms_to_search:
         for term in terms[:2]:
             # print(term)
-            url = format('http://localhost:8000/edna/abundance?term=%s' % term)
+            url = format('https://edna.nectar.auckland.ac.nz/edna/abundance?term=%s' % term)
             response = requests.get(url)
             response_json = response.json()
             abundance_results = response_json['data']
