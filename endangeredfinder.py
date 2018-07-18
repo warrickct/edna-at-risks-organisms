@@ -15,21 +15,27 @@ with open('risk_organisms_Simon_Feb18.csv', 'r') as csvfile:
 with open('output.csv', 'w') as output_file:
     fieldnames = ['otu_name', 'sample_values']
     writer = csv.DictWriter(output_file, fieldnames)
+    duplicate_results = []
     for terms in organisms_to_search:
-        for term in terms:
+        for term in terms[:2]:
+            # print(term)
             url = format('http://localhost:8000/edna/abundance?term=%s' % term)
             response = requests.get(url)
             response_json = response.json()
-            sample_values = []
             abundance_results = response_json['data']
             if len(abundance_results)>0:
                 for abundance_entry in abundance_results:
-                    # print(abundance_entry)
+                    otu_name = abundance_entry['']
+                    if otu_name in duplicate_results:
+                        print("Duplicate found - Skipping result % s" % otu_name)
+                        break
+                    else:
+                        duplicate_results.append(otu_name)
+                    sample_values = []
                     for field in abundance_entry:
-                        if field=='':
-                            otu_name = abundance_entry[field]
-                        else:
+                        if field !='':
                             abundance_value = abundance_entry[field] 
                             if abundance_value > 0:
                                 sample_values.append([field, abundance_value])
-                writer.writerow({'otu_name': otu_name, 'sample_values': sample_values})
+                    # print(duplicate_results)
+                    writer.writerow({'otu_name': otu_name, 'sample_values': sample_values})
