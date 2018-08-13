@@ -1,41 +1,41 @@
 import csv
 import requests
+from collections import OrderedDict
 
+def _get_search_data(term):
+    url = format('https://edna.nectar.auckland.ac.nz/edna/api/abundance?term=%s' % term)
+    response = requests.get(url)
+    response_json = response.json()
+    results = response_json['data']
+    return results 
 
-organisms_to_search = []
 with open('risk_organisms_Simon_Feb18.csv', 'r') as csvfile:
-    reader = csv.reader(csvfile)
-    for line in reader:
-        organism_terms = line[0].split(' ')
-        # remove the empty spaces between terms.
-        while '' in organism_terms:
-            organism_terms.remove('')
-        organisms_to_search.append(organism_terms)
-
-with open('output.csv', 'w') as output_file:
-    fieldnames = ['otu_name', 'sample_values']
-    writer = csv.DictWriter(output_file, fieldnames)
-    duplicate_results = []
-    for terms in organisms_to_search:
-        for term in terms[:2]:
-            # print(term)
-            url = format('https://edna.nectar.auckland.ac.nz/edna/abundance?term=%s' % term)
-            response = requests.get(url)
-            response_json = response.json()
-            abundance_results = response_json['data']
-            if len(abundance_results)>0:
-                for abundance_entry in abundance_results:
-                    otu_name = abundance_entry['']
-                    if otu_name in duplicate_results:
-                        print("Duplicate found - Skipping result % s" % otu_name)
-                        break
-                    else:
-                        duplicate_results.append(otu_name)
-                    sample_values = []
-                    for field in abundance_entry:
-                        if field !='':
-                            abundance_value = abundance_entry[field] 
-                            if abundance_value > 0:
-                                sample_values.append([field, abundance_value])
-                    # print(duplicate_results)
-                    writer.writerow({'otu_name': otu_name, 'sample_values': sample_values})
+    with open('output.csv', 'w') as output_file:
+        reader = csv.reader(csvfile)
+        fieldnames = ["query", "term", "otu", "site", "value"]
+        output_dict = OrderedDict({
+            'query': "",
+            'term': "",
+            'otu': "",
+            'site':"",
+            'value':""
+        })
+        writer = csv.DictWriter(output_file, fieldnames)
+        for line in reader:
+            output_dict['query'] = line[0]
+            for term in line[0].split(' '):
+                if term == '':
+                    continue
+                output_dict["term"] = term
+                search_results = _get_search_data(term)
+                for result in search_results:
+                    if len(result) == 0:
+                        continue
+                    output_dict["otu"] = result['']
+                    del result['']
+                    for site in result:
+                        output_dict["site"] = site
+                        output_dict["value"] = result[site]
+            if (output_dict['otu'] != "" and output_dict['value'] != ""):
+                print(output_dict)
+                writer.writerow(output_dict)
