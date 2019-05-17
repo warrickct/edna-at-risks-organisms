@@ -17,11 +17,9 @@ def _get_search_data(text):
     # url = format('https://edna.nectar.auckland.ac.nz/edna/api/abundance?otu=&term=%s' % term)
     term = "&text=" + text
     url = format(sample_otu_dev_url + term)
-    print(url)
 
     response = requests.get(url)
     results = response.json()
-    print(results)
     return results 
 
 def _create_site_lookup(sites):
@@ -29,8 +27,21 @@ def _create_site_lookup(sites):
     if site_dict:
         return
     for site in sites:
-        print(site)
         site_dict[site['id']] = site
+
+def get_site_info(site_id):
+    ''' attempts to get sample identifier from lookup, if fails then requests from database.'''
+    print(site_id)
+    if site_id in site_dict:
+        return site_dict[site_id]
+    else:
+        url = 'http://localhost:8000/edna/api/v1.0/sample_context/' + str(site_id)
+        response = requests.get(url)
+        json = response.json()
+        name = json['name']
+        site_dict[site_id] = name
+        return name
+
 
 def get_otu_info(otu_id):
     ''' queries for info regarding an otu. Tries local dict first then resorts to querying api as last resort'''
@@ -41,29 +52,29 @@ def get_otu_info(otu_id):
         response = requests.get(url)
         json = response.json()
         name = json['otu_names'][0]
-        print(name)
+        return name
 
 
-with open('./endangered_files/risk_organisms_Simon_Feb18.csv', 'r') as csvfile:
+with open('./endangered_files/risk_organisms_Simon_amended-combined-17-may-2019.csv', 'r') as csvfile:
     with open('output.csv', 'w') as output_file:
         reader = csv.reader(csvfile)
         writer = csv.writer(output_file, delimiter=",")
+        header = ["endangered organisms", "organism subterm queried", "organism matched", "containing sample", "abundance"]
+        writer.writerow(header)
         for line in reader:
             query = line[0]
             # re sub removed '(' ')' '[' ']' and replaces with ''
             cleaned_query = re.sub(r'(?:(?<=\().+?(?=\))|(?<=\[).+?(?=\]))', "", line[0])
-            print(cleaned_query)  
             for endangered_segment in cleaned_query.split(' '):
                 if (endangered_segment != ''):
-                    # print(term)
                     response_data = _get_search_data(endangered_segment)
                     sample_otus = response_data['sample_otu_data']
-                    _create_site_lookup(response_data['sample_contextual_data']) 
+                    # _create_site_lookup(response_data['sample_contextual_data']) 
                     if len(sample_otus) > 0:
                         for sample_otu in sample_otus:
-                            print(sample_otu)
                             otu_name = get_otu_info(sample_otu[0])
-                            sample_identifier = site_dict[sample_otu[1]]
+                            # sample_identifier = site_dict[sample_otu[1]]
+                            sample_identifier = get_site_info(sample_otu[1])
                             value = [sample_otu[2]]
                             # for field in sample_otu:
                             #     if field == "":
