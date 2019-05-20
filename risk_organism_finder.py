@@ -51,14 +51,17 @@ def search_and_write_row(organism, row):
 
     def _all_taxons_above_genus(row, name):
         ''' Checks that all the terms within a search row are from the genus taxon or above to prevent false positives.'''
-        name_from_genus = name.split('g__')
-        print(name_from_genus)
-        contains_all_terms = True
-        for field in row:
-            if field not in name_from_genus:
-                print("{} not in {}".format(field, name_from_genus))
-                contains_all_terms = False
-        print("all terms in genus or above")
+        if 'g__' in name:
+            name_from_genus = name.split('g__')[1]
+            print(name_from_genus)
+            contains_all_terms = True
+            for field in row:
+                if field not in name_from_genus:
+                    print("{} not in {}".format(field, name_from_genus))
+                    contains_all_terms = False
+            print("all terms in genus or above")
+        else:
+            contains_all_terms = False
         return contains_all_terms
 
     response_data = _get_sample_otus(row)
