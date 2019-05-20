@@ -36,7 +36,7 @@ def get_site_info(site_id):
         site_dict[site_id] = name
         return name
 
-def get_otu_info(otu_id):
+def get_otu_name(otu_id):
     ''' queries for info regarding an otu. Tries local dict first then resorts to querying api as last resort'''
     if otu_id in otu_dict:
         return otu_dict[otu_id]
@@ -48,16 +48,32 @@ def get_otu_info(otu_id):
         return name
 
 def search_and_write_row(organism, row):
+
+    def _all_taxons_above_genus(row, name):
+        ''' Checks that all the terms within a search row are from the genus taxon or above to prevent false positives.'''
+        name_from_genus = name.split('g__')
+        print(name_from_genus)
+        contains_all_terms = True
+        for field in row:
+            if field not in name_from_genus:
+                print("{} not in {}".format(field, name_from_genus))
+                contains_all_terms = False
+        print("all terms in genus or above")
+        return contains_all_terms
+
     response_data = _get_sample_otus(row)
     sample_otus = response_data['sample_otu_data']
     # _create_site_lookup(response_data['sample_contextual_data']) 
     if len(sample_otus) > 0:
         for sample_otu in sample_otus:
-            otu_name = get_otu_info(sample_otu[0])
+            otu_code = get_otu_name(sample_otu[0])
             # sample_identifier = site_dict[sample_otu[1]]
-            sample_identifier = get_site_info(sample_otu[1])
-            value = [sample_otu[2]]
-            writer.writerow([organism, otu_name, sample_identifier, value])
+            if _all_taxons_above_genus(row, otu_code):
+                sample_identifier = get_site_info(sample_otu[1])
+                value = [sample_otu[2]]
+                writer.writerow([organism, otu_code, sample_identifier, value])
+            else:
+                writer.writerow([organism])
     else:
         writer.writerow([organism])
 
