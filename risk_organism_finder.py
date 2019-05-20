@@ -69,7 +69,7 @@ for path in paths:
         with open(path + '-output', 'w') as output_file:
             reader = csv.reader(csvfile)
             writer = csv.writer(output_file, delimiter=",")
-            header = ["endangered organisms", "organism subterm queried", "organism matched", "containing sample", "abundance"]
+            header = ["risk organism", "taxon searched", "organism matched", "containing sample", "abundance"]
             writer.writerow(header)
             for row in reader:
                 for field in row:
@@ -79,10 +79,10 @@ for path in paths:
                 organism = genus + " " + species
 
                 if species:
-                    species = "s__" + species
+                    # species = "s__" + species
                     search_and_write_row(organism, species)
                 elif genus:
-                    genus = "g__" + genus
+                    # genus = "g__" + genus
                     search_and_write_row(organism, genus)
                 # if (endangered_segment != ''):
                 #     response_data = _get_search_data(endangered_segment)
