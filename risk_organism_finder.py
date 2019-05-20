@@ -12,11 +12,13 @@ otu_dev_url = 'http://localhost:8000/edna/api/v1.0/abundance?otu='
 site_dict = {}
 otu_dict = {}
 
-def _get_sample_otus(text):
+def _get_sample_otus(terms):
     # url = format('https://edna.nectar.auckland.ac.nz/edna/api/abundance?otu=&term=%s' % term)
-    term = "&text=" + text
-    url = format(sample_otu_dev_url + term)
-
+    url = sample_otu_dev_url
+    for term in terms:
+        term = "&text=" + term
+        url = url + term
+    print(url)
     response = requests.get(url)
     results = response.json()
     return results 
@@ -45,8 +47,8 @@ def get_otu_info(otu_id):
         name = json['otu_names'][0]
         return name
 
-def search_and_write_row(organism, taxon):
-    response_data = _get_sample_otus(taxon)
+def search_and_write_row(organism, row):
+    response_data = _get_sample_otus(row)
     sample_otus = response_data['sample_otu_data']
     # _create_site_lookup(response_data['sample_contextual_data']) 
     if len(sample_otus) > 0:
@@ -55,9 +57,9 @@ def search_and_write_row(organism, taxon):
             # sample_identifier = site_dict[sample_otu[1]]
             sample_identifier = get_site_info(sample_otu[1])
             value = [sample_otu[2]]
-            writer.writerow([organism, taxon, otu_name, sample_identifier, value])
+            writer.writerow([organism, otu_name, sample_identifier, value])
     else:
-        writer.writerow([organism, taxon])
+        writer.writerow([organism])
 
 paths = glob.glob('./endangered_files/*.csv')
 for path in paths:
@@ -65,18 +67,15 @@ for path in paths:
     with open(path, 'r') as csvfile:
         with open(path + '-output', 'w') as output_file:
             reader = csv.reader(csvfile)
+            next(reader)
             writer = csv.writer(output_file, delimiter=",")
-            header = ["risk organism", "taxon searched", "organism matched", "containing sample", "abundance"]
+            header = [ "risk organism", "organism matched", "containing sample", "abundance"]
             writer.writerow(header)
             for row in reader:
                 for field in row:
                     field = re.sub(r'(?:(?<=\().+?(?=\))|(?<=\[).+?(?=\]))', "", field)
+                    field.strip()
                 genus = row[0]
                 species = row[1]
                 organism = genus + " " + species
-                if species:
-                    # species = "s__" + species
-                    search_and_write_row(organism, species)
-                elif genus:
-                    # genus = "g__" + genus
-                    search_and_write_row(organism, genus)
+                search_and_write_row(organism, row)
