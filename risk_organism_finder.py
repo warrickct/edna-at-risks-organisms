@@ -8,9 +8,7 @@ from collections import OrderedDict
 # 'prod': 'https://edna.nectar.auckland.ac.nz/enda/api/v1.0/abundance?otu=',
 
 sample_otu_dev_url = 'http://localhost:8000/edna/api/v1.0/abundance?otu='
-
 otu_dev_url = 'http://localhost:8000/edna/api/v1.0/abundance?otu='
-
 site_dict = {}
 otu_dict = {}
 
@@ -35,7 +33,6 @@ def get_site_info(site_id):
         name = json['name']
         site_dict[site_id] = name
         return name
-
 
 def get_otu_info(otu_id):
     ''' queries for info regarding an otu. Tries local dict first then resorts to querying api as last resort'''
@@ -77,23 +74,9 @@ for path in paths:
                 genus = row[0]
                 species = row[1]
                 organism = genus + " " + species
-
                 if species:
                     # species = "s__" + species
                     search_and_write_row(organism, species)
                 elif genus:
                     # genus = "g__" + genus
                     search_and_write_row(organism, genus)
-                # if (endangered_segment != ''):
-                #     response_data = _get_search_data(endangered_segment)
-                #     sample_otus = response_data['sample_otu_data']
-                #     # _create_site_lookup(response_data['sample_contextual_data']) 
-                #     if len(sample_otus) > 0:
-                #         for sample_otu in sample_otus:
-                #             otu_name = get_otu_info(sample_otu[0])
-                #             # sample_identifier = site_dict[sample_otu[1]]
-                #             sample_identifier = get_site_info(sample_otu[1])
-                #             value = [sample_otu[2]]
-                #             writer.writerow([genus, endangered_segment, otu_name, sample_identifier, value])
-                #     else:
-                #         writer.writerow([genus, endangered_segment])
