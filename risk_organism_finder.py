@@ -3,6 +3,7 @@ import re
 import requests
 import glob
 from collections import OrderedDict
+import os
 
 # 'dev': 'http://localhost:8000/edna/api/v1.0/abundance?otu=',
 # 'prod': 'https://edna.nectar.auckland.ac.nz/enda/api/v1.0/abundance?otu=',
@@ -95,12 +96,17 @@ def search_and_write_row(organism, row):
     else:
         writer.writerow([organism])
 
+import ntpath
+
+output_dir = './output/'
+
 paths = glob.glob('./endangered_files/*.csv')
 for path in paths:
     print(path)
-    with open(path, 'r') as csvfile:
-        with open(path + '-output', 'w') as output_file:
-            reader = csv.reader(csvfile)
+    head, tail = ntpath.split(path)
+    with open(path, 'r') as input_file:
+        with open(output_dir + tail, 'w') as output_file:
+            reader = csv.reader(input_file)
             next(reader)
             writer = csv.writer(output_file, delimiter=",")
             header = [ "risk organism", "organism matched", "containing sample", "abundance"]
