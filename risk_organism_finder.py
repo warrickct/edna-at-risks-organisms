@@ -7,14 +7,29 @@ from collections import OrderedDict
 # 'dev': 'http://localhost:8000/edna/api/v1.0/abundance?otu=',
 # 'prod': 'https://edna.nectar.auckland.ac.nz/enda/api/v1.0/abundance?otu=',
 
-sample_otu_dev_url = 'http://localhost:8000/edna/api/v1.0/abundance?otu='
-otu_dev_url = 'http://localhost:8000/edna/api/v1.0/abundance?otu='
+
+# TODO: Don't Repeat Yourself
+dev_base ='http://localhost:8000/edna/api/v1.0/' 
+prod_base = 'https://edna.nectar.auckland.ac.nz/edna/api/v1.0/'
+
+abundance_slug = 'abundance?otu='
+sample_context_slug = 'sample_context/'
+otu_slug = 'otu/'
+
+abundance_dev_api = dev_base + abundance_slug
+prod_api = prod_base + abundance_slug
+
+active_sample_context_api = prod_base + sample_context_slug
+
+active_otu_api = prod_base + otu_slug
+
+api_base_url = prod_api
+
 site_dict = {}
 otu_dict = {}
 
 def _get_sample_otus(terms):
-    # url = format('https://edna.nectar.auckland.ac.nz/edna/api/abundance?otu=&term=%s' % term)
-    url = sample_otu_dev_url
+    url = api_base_url
     for term in terms:
         term = "&text=" + term
         url = url + term
@@ -29,7 +44,7 @@ def get_site_info(site_id):
     if site_id in site_dict:
         return site_dict[site_id]
     else:
-        url = 'http://localhost:8000/edna/api/v1.0/sample_context/' + str(site_id)
+        url = active_sample_context_api + str(site_id)
         response = requests.get(url)
         json = response.json()
         name = json['name']
@@ -41,7 +56,7 @@ def get_otu_name(otu_id):
     if otu_id in otu_dict:
         return otu_dict[otu_id]
     else:
-        url = 'http://localhost:8000/edna/api/v1.0/otu/' + str(otu_id)
+        url = active_otu_api + str(otu_id)
         response = requests.get(url)
         json = response.json()
         name = json['otu_names'][0]
@@ -93,7 +108,6 @@ for path in paths:
             for row in reader:
                 for field in row:
                     field = re.sub(r'(?:(?<=\().+?(?=\))|(?<=\[).+?(?=\]))', "", field)
-                    field.strip()
                 genus = row[0]
                 species = row[1]
                 organism = genus + " " + species
