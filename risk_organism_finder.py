@@ -108,6 +108,7 @@ for path in paths:
             for row in reader:
                 for field in row:
                     field = re.sub(r'(?:(?<=\().+?(?=\))|(?<=\[).+?(?=\]))', "", field)
+                    field.strip()
                 genus = row[0]
                 species = row[1]
                 organism = genus + " " + species
